@@ -53,10 +53,12 @@ class Bot_Info:
         embed.add_field(name="**&qr**", value="Use &qr with text to generate your own qrcode!")
         embed.add_field(name="**&penislength**", value="Use &penislength to measure your penis length! Try tagging someone to find out theirs!")
         embed.add_field(name="**&dab**", value="Use &dab @someone to dab on them!")
+        embed.add_field(name="**&spin**", value="Use &spin @someone to spin on them!")
         embed.add_field(name="**&mock**", value="Use &mock with text to gEt cOoL tExT.")
         embed.add_field(name="**&userinfo**", value="Use &userinfo or &serverinfo to get the information.")
         embed.add_field(name="**&jerkit**", value="Use &jerkit to jerk off when you can't jerk off. You can only use it once every 5min.")
         embed.add_field(name="**&walk**", value="Use &walk @someone to walk with them!")
+        embed.add_field(name="**&brawl**", value="Use &brawl @someone @someone to let them fight!")
         embed.add_field(name="**&ban/&kick/&nick**", value="Only higher roles of the server can use these functions.")
         embed.add_field(name="**&ping**", value="Nothing special. Just to test if bot is working.")
         embed.add_field(name="**&feedback**", value="Use this to send feedback, we'll contact you if your feedback is valuable.")
@@ -69,7 +71,7 @@ class Bot_Info:
         embed.add_field(name="😎", value="[invite](https://discordapp.com/oauth2/authorize?client_id=429662497172357123&scope=bot&permissions=8)", inline=True)
 
         await client.say(content="So here's the info of Emojipasta-Bot ", embed=embed)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&help invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("help", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def userinfo(ctx, *, user: discord.Member=None):
@@ -177,9 +179,16 @@ class Bot_Info:
                                   "to send this")
 
 class Bot_Function:
-    @client.command()
+
+    async def log(command, server, time):
+        embed = discord.Embed(description="used the " + command + " command.", timestamp=time)
+        embed.set_author(name=server)
+        await client.send_message(discord.Object(id="436544688745480203"), embed=embed)
+
+    @client.command(pass_context=True)
     @commands.cooldown(1, 30, commands.BucketType.user)
-    async def brawl(*users):
+    async def brawl(ctx, *users):
+        await Bot_Function.log("brawl", ctx.message.server, ctx.message.timestamp)
         brawlers = len(users)
         if brawlers > 5:
             await client.say("To prevent this command from filling the chat with spam you are limited to 5 brawlers.")
@@ -197,9 +206,9 @@ class Bot_Function:
             if(len(combatants) == 1):
                 await client.say("{} is the victor!".format(combatants[0]))
                 return
-            los = rand.choice(combatants)
+            los = choice(combatants)
             if(len(combatants) == 2):
-                vic = rand.choice(combatants)
+                vic = choice(combatants)
                 if vic == los:
                     combatants.remove(los)
                     vic = combatants[0]
@@ -207,25 +216,26 @@ class Bot_Function:
                     combatants.remove(los)
             elif(brawlers > 2):
                 combatants.remove(los)
-                vic = rand.choice(combatants)
-            atk = rand.choice(attack)
-            bpt = rand.choice(bodypart)
+                vic = choice(combatants)
+            atk = choice(attack)
+            bpt = choice(bodypart)
             await client.say("{0} has {1} {2} in the {3}! {2} is defeated!".format(vic,atk,los,bpt))
             await asyncio.sleep(5)
+
     @client.command(pass_context=True)
     async def pasta(ctx, *, original_words):
         generator = EmojipastaGenerator.of_default_mappings()
         final_emoji = generator.generate_emojipasta(original_words)
 
         await client.say(final_emoji)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&pasta called from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("pasta", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def yn(ctx, *args):
         decide_list = ['YES!','NO!']
         decide_answer = choice(decide_list)
         await client.say(decide_answer)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&yn invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("yn", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def clap(ctx, *, original_clap):
@@ -238,14 +248,14 @@ class Bot_Function:
             new_blocks.append(emoji)
         final_clap = "".join(new_blocks)
         await client.say(final_clap)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&clap invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("clap", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def rn(ctx, arg1=1, arg2=100):
         try:
             random_number = randint(arg1, arg2)
             await client.say("{}-{}: {}".format(arg1, arg2, random_number))
-            await client.send_message(discord.Object(id="436544688745480203"), "```&rn invoked from <" + str(ctx.message.server) + ">```")
+            await Bot_Function.log("rn", ctx.message.server, ctx.message.timestamp)
         except ValueError:
             await client.say("Invalid range")
 
@@ -253,23 +263,37 @@ class Bot_Function:
     async def b(ctx, *, message: str):
         newmsg = message.replace("b", "\U0001F171").replace("B", "\U0001f171")
         await client.say(newmsg)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&b invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("b", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def penislength(ctx, member: discord.Member=None):
         member = member or ctx.message.author
         inches = randint(2, 12)
         cm = inches * 2.54
-        str = "8" + ("=" * inches) + "D" + " " + "\U0001F4A6" * (inches // 2)
-
-        await client.say("{}'s penis is **{} inches!** ({} cm)\n{}".format(member.mention, inches, cm, str))
-        await client.send_message(discord.Object(id="436544688745480203"), "```&penislength invoked from <" + str(ctx.message.server) + ">```")
+        text = "8" + ("=" * inches) + "D" + " " + "\U0001F4A6" * (inches // 2)
+        reaction = ""
         if inches >= 9:
-            await client.say("\U0001F60D Wow! \U0001F60D")
+            reaction = "\U0001F60D Wow! \U0001F60D"
         elif inches <= 4:
-            await client.say("Ehh \U0001F612")
+            reaction = "Ehh \U0001F612"
         else:
-            await client.say("Nice \U0001F609")
+            reaction = "Nice \U0001F609"
+        await client.say("{}'s penis is **{} inches!** ({} cm)\n{}\n{}".format(member.mention, inches, cm, text, reaction))
+        await Bot_Function.log("penislength", ctx.message.server, ctx.message.timestamp)
+
+    @client.command(pass_context=True)
+    async def spin(ctx, member: discord.Member=None):
+        if member:
+            member = member
+            message = ":regional_indicator_o::regional_indicator_h::warning::regional_indicator_s::regional_indicator_h::regional_indicator_i::regional_indicator_t::exclamation: THIS NI:b::b:A :fire: {} :fire: JUST GOT SPUN ON BY {}! :100: :ok_hand: ".format(member.mention, ctx.message.author.mention)
+        else:
+            member = ctx.message.author
+            message = ":regional_indicator_o::regional_indicator_h::warning::regional_indicator_s::regional_indicator_h::regional_indicator_i::regional_indicator_t::exclamation: THIS NI:b::b:A :fire: {} :fire:JUST SPUN {}! :100: :ok_hand:".format(member.mention, ctx.message.channel.mention)
+
+        embed = discord.Embed()
+        embed.set_image(url="https://cdn.discordapp.com/attachments/372188609425702915/436986898641059870/fidget-spinner-gif-transparent-1.gif")
+        await client.say(content=message, embed=embed)
+        await Bot_Function.log("spin", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def dab(ctx, member: discord.Member=None):
@@ -324,7 +348,7 @@ class Bot_Function:
         embed = discord.Embed()
         embed.set_image(url=dab_images[index])
         await client.say(content=message, embed=embed)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&dab invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("dab", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def walk(ctx, member: discord.Member=None):
@@ -336,12 +360,12 @@ class Bot_Function:
             message = "( ͡° ͜ʖ ͡°) ╯╲___ Who wants to go for a walk??"
 
         await client.say(message)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&walk invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("walk", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def jerkit(ctx):
-        await client.send_message(discord.Object(id="436544688745480203"), "```&jerkit invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("jerkit", ctx.message.server, ctx.message.timestamp)
         msg = await client.say("8:fist:====D")
         await asyncio.sleep(.2)
         await client.edit_message(msg,"8=:fist:===D")
@@ -367,13 +391,13 @@ class Bot_Function:
         qr = pyqrcode.create(msg)
         qr.png('qrcode.png', scale=5)
         await client.send_file(ctx.message.channel, 'qrcode.png')
-        await client.send_message(discord.Object(id="436544688745480203"), "```&qr invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("qr", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def owo(ctx, *, message: str):
         newmsg = message.replace("r", "w").replace("l", "w")
         await client.say("**O**w**O** " + newmsg + " **O**w**O**")
-        await client.send_message(discord.Object(id="436544688745480203"), "```&owo invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("owo", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def mock(ctx, *, message: str = None):
@@ -394,7 +418,7 @@ class Bot_Function:
         embed.set_thumbnail(url="http://i.imgur.com/upItEiG.jpg")
         embed.colour = ctx.message.author.colour if hasattr(ctx.message.author, "colour") else discord.Colour.default()
         await client.send_message(channel, embed=embed)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&mock invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("mock", ctx.message.server, ctx.message.timestamp)
 
     @client.command(pass_context=True)
     async def ban(ctx, target: discord.User, *reason):
@@ -449,7 +473,7 @@ class Bot_Function:
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/421005964276138005/434538229438349313/Shrek_emoji.png")
         embed.colour = ctx.message.author.colour if hasattr(ctx.message.author, "colour") else discord.Colour.default()
         await client.send_message(channel, embed=embed)
-        await client.send_message(discord.Object(id="436544688745480203"), "```&shrek invoked from <" + str(ctx.message.server) + ">```")
+        await Bot_Function.log("shrek", ctx.message.server, ctx.message.timestamp)
 
 
 def main():
@@ -468,4 +492,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
